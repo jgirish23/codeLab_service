@@ -1,31 +1,39 @@
 package com.codelab.codelab.config;
 
-import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3Configuration;
-import software.amazon.awssdk.services.s3.S3ClientBuilder;
 
 import java.net.URI;
 
 @Configuration
+@ConditionalOnProperty(name = "r2.enabled", havingValue = "true")
 public class R2Config {
 
-    private static final Dotenv dotenv = Dotenv.load(); // Loads .env file
+    @Value("${r2.token.access-key}")
+    private String R2_ACCESS_KEY;
 
-    private static final String R2_ACCESS_KEY = dotenv.get("R2_ACCESS_KEY");
-    private static final String R2_SECRET_KEY = dotenv.get("R2_SECRET_KEY");
-    private static final String R2_ACCOUNT_ID = dotenv.get("R2_ACCOUNT_ID");
-    private static final String R2_ENDPOINT = "https://" + R2_ACCOUNT_ID + ".r2.cloudflarestorage.com";
+    @Value("${r2.token.secret-key}")
+    private String R2_SECRET_KEY;
+
+    @Value("${r2.token.account-id}")
+    private String R2_ACCOUNT_ID;
+
+
 
     @Bean
     public S3Client s3Client() {
+        if (R2_ACCOUNT_ID == null || R2_ACCOUNT_ID.isBlank()) {
+            throw new IllegalStateException("r2.token.account-id is missing");
+        }
+        String R2_ENDPOINT = "https://" + R2_ACCOUNT_ID.trim() + ".r2.cloudflarestorage.com";
+
         return S3Client.builder()
                 .credentialsProvider(StaticCredentialsProvider.create(
                         AwsBasicCredentials.create(R2_ACCESS_KEY, R2_SECRET_KEY)))

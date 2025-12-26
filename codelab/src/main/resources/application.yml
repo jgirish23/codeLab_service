@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: codelab
+
+server:
+  port: 8080
+
+r2:
+  enabled: true
+  token:
+    access-key: ${R2_ACCESS_KEY}
+    secret-key: ${R2_SECRET_KEY}
+    account-id: ${R2_ACCOUNT_ID}
